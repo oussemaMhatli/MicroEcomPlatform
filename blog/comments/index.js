@@ -1,36 +1,47 @@
-const express=require('express');
-const { randomBytes}=require('crypto');
-const bodyParser=require('body-parser');
-const cors=require('cors')
-const app=express();
-app.use(bodyParser.json()); 
+const express = require("express");
+const bodyParser = require("body-parser");
+const { randomBytes } = require("crypto");
+const cors = require("cors");
+const axios = require("axios");
 
-const commentsByPostId={};
-app.use(cors())
-app.get('/posts/:id/comments' ,(req,res)=>{
-    res.send(commentsByPostId[req.params.id] || []);
+const app = express();
+app.use(bodyParser.json());
+app.use(cors());
 
+const commentsByPostId = {};
+
+app.get("/posts/:id/comments", (req, res) => {
+  res.send(commentsByPostId[req.params.id] || []);
 });
-app.post('/posts/:id/comments', (req, res) => {
-    // Generate a random ID for the new comment
-    const commentId = randomBytes(4).toString('hex'); 
-    
-    const { content } = req.body; 
-    
-    // Get the array of comments for the post with the given 'id' (from the URL parameters)
-    // If no comments exist for this post, use an empty array
-    const comments = commentsByPostId[req.params.id] || []; // Find comments for the post ID, or create an empty array if none exist yet
-    
-    // Add the new comment (an object with 'id' and 'content') to the array of comments
-    comments.push({ id: commentId, content }); // Push the new comment object into the comments array
-    
-    // Update the comments for the post with the given ID
-    commentsByPostId[req.params.id] = comments; // Save the updated array of comments back to the commentsByPostId object
-    
-    // Respond with status 201 (Created) and send the updated list of comments
-    res.status(201).send(comments); // Send a response with the updated comments list
- });
- 
-app.listen(4001,()=>{
-    console.log('comments app run in 4001')
-})
+
+app.post("/posts/:id/comments", async (req, res) => {
+  const commentId = randomBytes(4).toString("hex");
+  const { content } = req.body;
+
+  const comments = commentsByPostId[req.params.id] || [];
+
+  comments.push({ id: commentId, content });
+
+  commentsByPostId[req.params.id] = comments;
+
+  await axios.post("http://localhost:4005/events", {
+    type: "CommentCreated",
+    data: {
+      id: commentId,
+      content,
+      postId: req.params.id,
+    },
+  });
+
+  res.status(201).send(comments);
+});
+
+app.post("/events", (req, res) => {
+  console.log("Event Received", req.body.type);
+
+  res.send({});
+});
+
+app.listen(4001, () => {
+  console.log("Listening on 4001");
+});
