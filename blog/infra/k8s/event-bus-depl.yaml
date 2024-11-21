@@ -1,0 +1,31 @@
+apiVersion: apps/v1 #version 1.
+kind: Deployment #deployment type
+metadata: # Sets the name for this deployment resource
+  name: event-bus-depl  
+spec:      #The specification for the deployment configuration
+  replicas: 1 #number of identical pods Kubernetes should keep running for this deployment
+  selector: #Specifies how Kubernetes will identify the pods managed by this deployment.
+    matchLabels: 
+      app: event-bus # link the deployment to a specific set of pods that it will control, restart, or scale as needed.
+  template: #Defines the pod template for the deployment.
+    metadata: #Sets labels for the pod created by this deployment.
+      labels: #The label app: event-bus allows Kubernetes to identify these pods and link them to the deployment based on the matchLabels selector.
+        app: event-bus
+    spec: #Contains details of the pod’s configuration.
+      containers:
+        - name: event-bus 
+          image: oussema62/event-bus
+--- #for create other thing in the container
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-bus-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: event-bus
+  ports:
+    - name: event-bus
+      protocol: TCP
+      port: 4005
+      targetPort: 4005

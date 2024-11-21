@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod #create pod instance  
+metadata:
+  name: posts #name of the pod 
+spec: #configuration of the pod
+  containers:
+    - name: posts #name of the container when we create container instance we must make a dash
+      image: postimage:0.0.1  #image of the container
